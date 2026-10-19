@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,10 +28,14 @@ jobs:
         with:
           packages: ""
 
-      - name: Install SDK + NDK components
+      - name: Install SDK + NDK components (best effort)
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-37" "platforms;android-36" "build-tools;37.0.0" "ndk;27.1.12297006"
+          for p in "platform-tools" "platforms;android-37" "platforms;android-37.0" "platforms;android-36" "build-tools;37.0.0" "ndk;27.1.12297006"; do
+            echo "=== Installing $p"
+            sdkmanager "$p" || echo "Skipping $p (not found); Gradle will fetch it if needed"
+          done
+          sdkmanager --list_installed
 
       - name: Create .env from secrets
         run: |
